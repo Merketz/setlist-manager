@@ -37,6 +37,7 @@ def mostrar_tabela(titulo: str, lista_musicas: List[Dict]) -> None:
     table.add_column("Tom", justify="center", style="yellow")
     table.add_column("BPM", justify="right")
     table.add_column("Status", style="green")
+    table.add_column("Obs", style="dim")
 
     for i, musica in enumerate(lista_musicas, 1):
         table.add_row(
@@ -45,7 +46,8 @@ def mostrar_tabela(titulo: str, lista_musicas: List[Dict]) -> None:
             musica['tipo'],
             musica['tom'],
             str(musica['bpm']),
-            musica['status']
+            musica['status'],
+            musica['observacoes']
         )
     console.print(table)
 
