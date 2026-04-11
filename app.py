@@ -150,9 +150,16 @@ def main():
         limpar_tela()
         titulo = "[bold magenta]🎸 SETLIST MANAGER PRO[/bold magenta]"
         console.print(Panel.fit(titulo, border_style="cyan"))
-        
-        console.print("1. [cyan]Ver Repertório[/cyan] | 2. [green]Adicionar[/green]")
-        console.print("3. [yellow]Editar[/yellow] | 4. [red]Remover[/red]")
+
+        # Menu quebrado em linhas curtas para respeitar o limite de 79 chars
+        console.print(
+            "1. [cyan]Ver Repertório[/cyan] | "
+            "2. [green]Adicionar[/green]"
+        )
+        console.print(
+            "3. [yellow]Editar[/yellow] | "
+            "4. [red]Remover[/red]"
+        )
         console.print("5. [blue]Mover[/blue] | 6. Sair")
 
         op = input("\nEscolha: ")
