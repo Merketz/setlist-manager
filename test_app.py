@@ -1,0 +1,41 @@
+import os
+import app  
+
+# Teste 1: Verifica se o programa lida bem com a ausência do arquivo
+def test_carregar_setlist_vazio():
+    app.ARQUIVO_SETLIST = 'arquivo_fantasma.json'
+    if os.path.exists(app.ARQUIVO_SETLIST):
+        os.remove(app.ARQUIVO_SETLIST)
+    assert app.carregar_setlist() == []
+
+# Teste 2: Verifica se consegue salvar e carregar uma música
+def test_salvar_e_carregar():
+    app.ARQUIVO_SETLIST = 'setlist_teste.json'
+    musica_teste = [{
+        "nome": "Fascination Street", 
+        "tipo": "Cover", 
+        "tom": "E", 
+        "bpm": "120", 
+        "status": "Pronta", 
+        "observacoes": "Repassar baixo"
+    }]
+    
+    app.salvar_setlist(musica_teste)
+    carregado = app.carregar_setlist()
+    
+    assert len(carregado) == 1
+    assert carregado[0]["nome"] == "Fascination Street"
+    
+    if os.path.exists(app.ARQUIVO_SETLIST):
+        os.remove(app.ARQUIVO_SETLIST)
+
+# Teste 3: Verifica a estrutura
+def test_estrutura_nova_musica():
+    setlist_virtual = []
+    nova_musica = {
+        "nome": "Música Autoral", "tipo": "Autoral", "tom": "Drop D",
+        "bpm": "110", "status": "Em ensaio", "observacoes": ""
+    }
+    setlist_virtual.append(nova_musica)
+    assert len(setlist_virtual) == 1
+    assert "tom" in setlist_virtual[0]
