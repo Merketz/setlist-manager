@@ -6,5 +6,16 @@
         "bpm": "200",
         "status": "pronta",
         "observacoes": "ainda algumas pequenas coisas pra ver"
+    },
+    {
+        "nome": "Beauty and a Beat (feat. Nicki Minaj)",
+        "artista": "Justin Bieber",
+        "genero": "Pop",
+        "duracao": "3:47",
+        "tipo": "Cover",
+        "tom": "C",
+        "bpm": "120",
+        "status": "ensaio",
+        "observacoes": "ainda em producao"
     }
 ]
