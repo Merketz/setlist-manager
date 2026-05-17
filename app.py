@@ -4,7 +4,7 @@ from typing import List, Dict
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
-
+from api_itunes import buscar_dados_musica
 
 console = Console()
 ARQUIVO_SETLIST = 'setlist.json'
@@ -33,21 +33,24 @@ def mostrar_tabela(titulo: str, lista_musicas: List[Dict]) -> None:
     table = Table(title=titulo, show_header=True, header_style="bold magenta")
     table.add_column("Nº", style="dim", width=4)
     table.add_column("Música", style="cyan", min_width=20)
+    table.add_column("Artista", style="blue") # NOVA COLUNA
     table.add_column("Tipo", justify="center")
     table.add_column("Tom", justify="center", style="yellow")
     table.add_column("BPM", justify="right")
+    table.add_column("Duração", style="magenta", justify="center") # NOVA COLUNA
     table.add_column("Status", style="green")
-    table.add_column("Obs", style="dim")
 
+    # Usamos .get() aqui para não quebrar caso seu setlist.json tenha músicas antigas sem esses dados
     for i, musica in enumerate(lista_musicas, 1):
         table.add_row(
             str(i),
-            musica['nome'],
-            musica['tipo'],
-            musica['tom'],
-            str(musica['bpm']),
-            musica['status'],
-            musica['observacoes']
+            musica.get('nome', 'N/A'),
+            musica.get('artista', '-'),
+            musica.get('tipo', '-'),
+            musica.get('tom', '-'),
+            str(musica.get('bpm', '-')),
+            musica.get('duracao', '-'),
+            musica.get('status', '-')
         )
     console.print(table)
 
@@ -71,10 +74,30 @@ def selecionar_indice(setlist: List[Dict], acao: str) -> int:
 def adicionar_musica(setlist: List[Dict]) -> None:
     limpar_tela()
     console.print("[bold cyan]--- ➕ ADICIONAR MÚSICA ---[/bold cyan]")
-    nome = input("Nome: ").strip()
+    nome = input("Nome da música: ").strip()
     if not nome:
         return
 
+    # Pede o artista para ajudar a API a ser mais precisa
+    artista_busca = input("Artista/Banda (opcional, para ajudar na busca): ").strip()
+    
+    console.print("\n[italic dim]Buscando dados na API do iTunes... ⏳[/italic dim]")
+    dados_api = buscar_dados_musica(nome, artista_busca)
+
+    if dados_api:
+        console.print(f"[green]✅ Encontrado: {dados_api['nome']} - {dados_api['artista']} | {dados_api['genero']} | {dados_api['duracao']}[/green]\n")
+        nome_final = dados_api['nome']
+        artista_final = dados_api['artista']
+        genero_final = dados_api['genero']
+        duracao_final = dados_api['duracao']
+    else:
+        console.print("[yellow]❌ Não encontrada na API. Seguiremos com os dados manuais:[/yellow]\n")
+        nome_final = nome
+        artista_final = artista_busca if artista_busca else "Desconhecido"
+        genero_final = "Desconhecido"
+        duracao_final = input("Duração (ex: 3:45) ou enter para pular: ").strip() or "-"
+
+    # Dados específicos do seu ensaio
     tipo = input("Tipo (Autoral/Cover): ").strip().capitalize()
     tom = input("Tom: ").strip()
     bpm = input("BPM: ").strip()
@@ -82,7 +105,10 @@ def adicionar_musica(setlist: List[Dict]) -> None:
     obs = input("Observações: ").strip()
 
     setlist.append({
-        "nome": nome,
+        "nome": nome_final,
+        "artista": artista_final,
+        "genero": genero_final,
+        "duracao": duracao_final,
         "tipo": tipo,
         "tom": tom,
         "bpm": bpm,
@@ -90,6 +116,8 @@ def adicionar_musica(setlist: List[Dict]) -> None:
         "observacoes": obs
     })
     salvar_setlist(setlist)
+    console.print("[green]✅ Música adicionada com sucesso![/green]")
+    input("\nPressione ENTER para continuar...")
 
 
 def editar_musica(setlist: List[Dict]) -> None:
@@ -99,18 +127,21 @@ def editar_musica(setlist: List[Dict]) -> None:
         return
 
     m = setlist[idx]
-    console.print(f"\n[yellow]Editando: {m['nome']}[/yellow]")
+    console.print(f"\n[yellow]Editando: {m.get('nome', '')}[/yellow]")
 
-    m['nome'] = input(f"Nome [{m['nome']}]: ").strip() or m['nome']
-    m['tipo'] = input(f"Tipo [{m['tipo']}]: ").strip() or m['tipo']
-    m['tom'] = input(f"Tom [{m['tom']}]: ").strip() or m['tom']
-    m['bpm'] = input(f"BPM [{m['bpm']}]: ").strip() or m['bpm']
-    m['status'] = input(f"Status [{m['status']}]: ").strip() or m['status']
-    obs = input(f"Obs [{m['observacoes']}]: ").strip()
-    m['observacoes'] = obs or m['observacoes']
+    m['nome'] = input(f"Nome [{m.get('nome', '')}]: ").strip() or m.get('nome', '')
+    m['artista'] = input(f"Artista [{m.get('artista', '')}]: ").strip() or m.get('artista', '')
+    m['tipo'] = input(f"Tipo [{m.get('tipo', '')}]: ").strip() or m.get('tipo', '')
+    m['tom'] = input(f"Tom [{m.get('tom', '')}]: ").strip() or m.get('tom', '')
+    m['bpm'] = input(f"BPM [{m.get('bpm', '')}]: ").strip() or m.get('bpm', '')
+    m['duracao'] = input(f"Duração [{m.get('duracao', '')}]: ").strip() or m.get('duracao', '')
+    m['status'] = input(f"Status [{m.get('status', '')}]: ").strip() or m.get('status', '')
+    obs = input(f"Obs [{m.get('observacoes', '')}]: ").strip()
+    m['observacoes'] = obs or m.get('observacoes', '')
 
     salvar_setlist(setlist)
     console.print("[green]✅ Alterações salvas![/green]")
+    input("\nPressione ENTER para continuar...")
 
 
 def remover_musica(setlist: List[Dict]) -> None:
@@ -119,12 +150,13 @@ def remover_musica(setlist: List[Dict]) -> None:
     if idx == -1:
         return
 
-    nome_mus = setlist[idx]['nome']
+    nome_mus = setlist[idx].get('nome', 'Desconhecida')
     confirmar = input(f"Remover '{nome_mus}'? (s/n): ").lower()
     if confirmar == 's':
         setlist.pop(idx)
         salvar_setlist(setlist)
         console.print("[red]❌ Música removida.[/red]")
+        input("\nPressione ENTER para continuar...")
 
 
 def reordenar_setlist(setlist: List[Dict]) -> None:
@@ -133,7 +165,7 @@ def reordenar_setlist(setlist: List[Dict]) -> None:
     if idx_origem == -1:
         return
 
-    nome_mus = setlist[idx_origem]['nome']
+    nome_mus = setlist[idx_origem].get('nome', 'Desconhecida')
     try:
         msg = f"Mover '{nome_mus}' para qual posição? (1 a {len(setlist)}): "
         nova_pos = int(input(msg))
@@ -142,8 +174,10 @@ def reordenar_setlist(setlist: List[Dict]) -> None:
             setlist.insert(nova_pos - 1, musica)
             salvar_setlist(setlist)
             console.print("[green]↕️ Ordem atualizada![/green]")
+            input("\nPressione ENTER para continuar...")
     except ValueError:
         console.print("[red]Posição inválida.[/red]")
+        input("\nPressione ENTER para continuar...")
 
 
 def main():
@@ -153,7 +187,6 @@ def main():
         titulo = "[bold magenta]🎸 SETLIST MANAGER PRO[/bold magenta]"
         console.print(Panel.fit(titulo, border_style="cyan"))
 
-        # Menu quebrado em linhas curtas para respeitar o limite de 79 chars
         console.print(
             "1. [cyan]Ver Repertório[/cyan] | "
             "2. [green]Adicionar[/green]"
@@ -179,7 +212,6 @@ def main():
             reordenar_setlist(setlist)
         elif op == '6':
             break
-
 
 if __name__ == "__main__":
     main()
