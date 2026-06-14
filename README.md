@@ -140,6 +140,5 @@ Quando usada de forma local, a aplicação CLI utiliza a seguinte estrutura no `
 
 ---
 
-**Desenvolvido por:** Marco Antonio Rodrigues  
-**Bootcamp:** Engenharia de Software - Etapa 2
+**Bootcamp:** Engenharia de Software - Etapa 3
 
