@@ -313,6 +313,32 @@ def gerenciar_feedbacks(setlist: List[Dict]) -> None:
             break
 
 
+def limpar_repertorio(setlist: List[Dict]) -> None:
+    limpar_tela()
+    console.print("[bold red]--- 🧹 LIMPAR TODO O REPERTÓRIO ---[/bold red]")
+    if not setlist:
+        console.print("[yellow]O repertório já está vazio.[/yellow]")
+        input("\nPressione ENTER para continuar...")
+        return
+
+    console.print(
+        "[yellow]⚠️  ATENÇÃO: Esta ação irá apagar "
+        "TODAS as músicas e feedbacks cadastrados![/yellow]"
+    )
+    msg_conf = "Tem certeza que deseja limpar todo o repertório? (s/n): "
+    confirmar = input(msg_conf).strip().lower()
+    if confirmar == 's':
+        setlist.clear()
+        salvar_setlist(setlist)
+        console.print(
+            "[green]✅ Todo o repertório foi "
+            "apagado com sucesso![/green]"
+        )
+    else:
+        console.print("[yellow]Ação cancelada.[/yellow]")
+    input("\nPressione ENTER para continuar...")
+
+
 def main():
     setlist = carregar_setlist()
     while True:
@@ -330,7 +356,8 @@ def main():
         )
         console.print(
             "5. [blue]Mover[/blue] | "
-            "6. [magenta]Feedbacks[/magenta] | 7. Sair"
+            "6. [magenta]Feedbacks[/magenta] | "
+            "7. [red]Limpar Tudo[/red] | 8. Sair"
         )
 
         op = input("\nEscolha: ")
@@ -394,6 +421,8 @@ def main():
         elif op == '6':
             gerenciar_feedbacks(setlist)
         elif op == '7':
+            limpar_repertorio(setlist)
+        elif op == '8':
             break
 
 
