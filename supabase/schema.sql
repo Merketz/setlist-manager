@@ -52,3 +52,20 @@ CREATE POLICY "Permitir deleção pública de setlists" ON public.setlists FOR D
 CREATE POLICY "Permitir leitura pública de setlist_musicas" ON public.setlist_musicas FOR SELECT USING (true);
 CREATE POLICY "Permitir inserção pública de setlist_musicas" ON public.setlist_musicas FOR INSERT WITH CHECK (true);
 CREATE POLICY "Permitir deleção pública de setlist_musicas" ON public.setlist_musicas FOR DELETE USING (true);
+
+-- 4. Tabela de Avaliações/Comentários
+CREATE TABLE IF NOT EXISTS public.avaliacoes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    musica_id UUID REFERENCES public.musicas(id) ON DELETE CASCADE NOT NULL,
+    autor TEXT NOT NULL,
+    nota INTEGER NOT NULL CHECK (nota >= 1 AND nota <= 5),
+    comentario TEXT DEFAULT '',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.avaliacoes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Permitir leitura pública de avaliacoes" ON public.avaliacoes FOR SELECT USING (true);
+CREATE POLICY "Permitir inserção pública de avaliacoes" ON public.avaliacoes FOR INSERT WITH CHECK (true);
+CREATE POLICY "Permitir deleção pública de avaliacoes" ON public.avaliacoes FOR DELETE USING (true);
+
