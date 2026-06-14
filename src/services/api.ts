@@ -64,6 +64,21 @@ export async function deletarMusica(id: string): Promise<void> {
   }
 }
 
+export async function atualizarMusica(id: string, musica: Partial<Omit<Musica, 'id' | 'created_at'>>): Promise<Musica> {
+  const { data, error } = await supabase
+    .from('musicas')
+    .update(musica)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Erro ao atualizar música:', error);
+    throw error;
+  }
+  return data;
+}
+
 // ==========================================
 // CRUD DE SETLISTS
 // ==========================================
