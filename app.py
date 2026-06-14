@@ -225,9 +225,35 @@ def main():
 
         op = input("\nEscolha: ")
         if op == '1':
-            limpar_tela()
-            mostrar_tabela("🎵 Setlist Atual", setlist)
-            input("\nENTER para voltar...")
+            while True:
+                limpar_tela()
+                mostrar_tabela("🎵 Setlist Atual", setlist)
+                console.print("\n[cyan]Opções de Visualização:[/cyan]")
+                console.print("1. [dim]Voltar ao Menu Principal[/dim]")
+                console.print("2. [yellow]Filtrar por Status[/yellow] (ex: Pronta, Em ensaio)")
+                console.print("3. [blue]Buscar por Nome ou Artista[/blue]")
+                
+                sub_op = input("\nEscolha: ").strip()
+                if sub_op == '1' or not sub_op:
+                    break
+                elif sub_op == '2':
+                    status_busca = input("Digite o status para filtrar: ").strip()
+                    if status_busca:
+                        filtradas = [m for m in setlist if status_busca.lower() in m.get('status', '').lower()]
+                        limpar_tela()
+                        mostrar_tabela(f"🎵 Músicas com Status: {status_busca}", filtradas)
+                        input("\nPressione ENTER para voltar...")
+                elif sub_op == '3':
+                    termo_busca = input("Digite o nome ou artista para buscar: ").strip()
+                    if termo_busca:
+                        filtradas = [
+                            m for m in setlist 
+                            if termo_busca.lower() in m.get('nome', '').lower() 
+                            or termo_busca.lower() in m.get('artista', '').lower()
+                        ]
+                        limpar_tela()
+                        mostrar_tabela(f"🎵 Resultados da busca por: {termo_busca}", filtradas)
+                        input("\nPressione ENTER para voltar...")
         elif op == '2':
             adicionar_musica(setlist)
         elif op == '3':
