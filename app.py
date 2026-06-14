@@ -39,10 +39,18 @@ def mostrar_tabela(titulo: str, lista_musicas: List[Dict]) -> None:
     table.add_column("BPM", justify="right")
     table.add_column("Duração", style="magenta", justify="center")  # COLUNA
     table.add_column("Status", style="green")
+    table.add_column("Avaliação", style="bold yellow", justify="center")
 
     # Usamos .get() aqui para não quebrar caso seu setlist.json
     # tenha músicas antigas sem esses dados salvos.
     for i, musica in enumerate(lista_musicas, 1):
+        avaliacoes = musica.get('avaliacoes', [])
+        if avaliacoes:
+            soma = sum(av.get('nota', 5) for av in avaliacoes)
+            media = f"⭐ {soma / len(avaliacoes):.1f} ({len(avaliacoes)})"
+        else:
+            media = "-"
+
         table.add_row(
             str(i),
             musica.get('nome', 'N/A'),
@@ -51,7 +59,8 @@ def mostrar_tabela(titulo: str, lista_musicas: List[Dict]) -> None:
             musica.get('tom', '-'),
             str(musica.get('bpm', '-')),
             musica.get('duracao', '-'),
-            musica.get('status', '-')
+            musica.get('status', '-'),
+            media
         )
     console.print(table)
 
@@ -206,6 +215,104 @@ def reordenar_setlist(setlist: List[Dict]) -> None:
         input("\nPressione ENTER para continuar...")
 
 
+def gerenciar_feedbacks(setlist: List[Dict]) -> None:
+    limpar_tela()
+    idx = selecionar_indice(setlist, "VER FEEDBACKS")
+    if idx == -1:
+        return
+
+    musica = setlist[idx]
+    while True:
+        limpar_tela()
+        t_feed = (
+            f"[bold magenta]💬 FEEDBACKS: "
+            f"{musica.get('nome', 'Sem nome')}[/bold magenta]"
+        )
+        console.print(Panel.fit(t_feed, border_style="cyan"))
+
+        avaliacoes = musica.get('avaliacoes', [])
+        if not avaliacoes:
+            msg_vazio = (
+                "[italic dim]Nenhum feedback cadastrado "
+                "para esta música ainda.[/italic dim]\n"
+            )
+            console.print(msg_vazio)
+        else:
+            for i, av in enumerate(avaliacoes, 1):
+                nota_stars = "⭐" * av.get('nota', 5)
+                msg_autor = (
+                    f"[bold]{i}. {av.get('autor', 'Anônimo')}[/bold] - "
+                    f"[yellow]{nota_stars}[/yellow]"
+                )
+                console.print(msg_autor)
+                coment = av.get('comentario')
+                if coment:
+                    console.print(f"   [italic]\"{coment}\"[/italic]")
+                console.print("-" * 40)
+            console.print("")
+
+        console.print(
+            "1. [green]Adicionar Feedback[/green] | "
+            "2. [red]Remover Feedback[/red] | "
+            "3. Voltar"
+        )
+        op = input("\nEscolha: ")
+
+        if op == '1':
+            limpar_tela()
+            console.print("[bold cyan]--- ➕ ADD FEEDBACK ---[/bold cyan]")
+            nome = input("Seu nome: ").strip()
+            if not nome:
+                continue
+            msg_func = "Sua função/instrumento (ex: Guitarra, Vocal): "
+            funcao = input(msg_func).strip() or "Integrante"
+
+            try:
+                nota = int(input("Nota (1 a 5): "))
+                if not (1 <= nota <= 5):
+                    raise ValueError
+            except ValueError:
+                console.print("[red]Nota inválida. Deve ser de 1 a 5.[/red]")
+                input("\nPressione ENTER para continuar...")
+                continue
+
+            comentario = input("Comentário (opcional): ").strip()
+
+            if 'avaliacoes' not in musica:
+                musica['avaliacoes'] = []
+
+            musica['avaliacoes'].append({
+                "autor": f"{nome} ({funcao})",
+                "nota": nota,
+                "comentario": comentario
+            })
+            salvar_setlist(setlist)
+            console.print("[green]✅ Feedback adicionado com sucesso![/green]")
+            input("\nPressione ENTER para continuar...")
+
+        elif op == '2':
+            if not avaliacoes:
+                console.print("[yellow]Sem feedbacks para remover.[/yellow]")
+                input("\nPressione ENTER para continuar...")
+                continue
+            try:
+                msg_rem = (
+                    f"\nNº do feedback para remover "
+                    f"(1 a {len(avaliacoes)} ou 0 para cancelar): "
+                )
+                escolha = int(input(msg_rem))
+                if 0 < escolha <= len(avaliacoes):
+                    avaliacoes.pop(escolha - 1)
+                    salvar_setlist(setlist)
+                    console.print("[red]❌ Feedback removido.[/red]")
+                    input("\nPressione ENTER para continuar...")
+            except ValueError:
+                console.print("[red]Opção inválida.[/red]")
+                input("\nPressione ENTER para continuar...")
+        elif op == '3':
+            break
+
+
 def main():
     setlist = carregar_setlist()
     while True:
@@ -221,7 +328,10 @@ def main():
             "3. [yellow]Editar[/yellow] | "
             "4. [red]Remover[/red]"
         )
-        console.print("5. [blue]Mover[/blue] | 6. Sair")
+        console.print(
+            "5. [blue]Mover[/blue] | "
+            "6. [magenta]Feedbacks[/magenta] | 7. Sair"
+        )
 
         op = input("\nEscolha: ")
         if op == '1':
@@ -237,6 +347,8 @@ def main():
         elif op == '5':
             reordenar_setlist(setlist)
         elif op == '6':
+            gerenciar_feedbacks(setlist)
+        elif op == '7':
             break
 
 

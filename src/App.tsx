@@ -3,12 +3,13 @@ import { SongForm } from './components/SongForm';
 import { SongList } from './components/SongList';
 import { SetlistBuilder } from './components/SetlistBuilder';
 import { SetlistList } from './components/SetlistList';
-import { listarMusicas, listarSetlists, Musica, Setlist } from './services/api';
+import { listarMusicas, listarSetlists, listarTodasAvaliacoes, Musica, Setlist, Avaliacao } from './services/api';
 import { RefreshCw } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [musicas, setMusicas] = useState<Musica[]>([]);
   const [setlists, setSetlists] = useState<Setlist[]>([]);
+  const [avaliacoes, setAvaliacoes] = useState<Avaliacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -16,12 +17,14 @@ export const App: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      const [musicasData, setlistsData] = await Promise.all([
+      const [musicasData, setlistsData, avaliacoesData] = await Promise.all([
         listarMusicas(),
         listarSetlists(),
+        listarTodasAvaliacoes(),
       ]);
       setMusicas(musicasData);
       setSetlists(setlistsData);
+      setAvaliacoes(avaliacoesData);
     } catch (err: any) {
       setError('Falha ao conectar com o Supabase. Verifique suas credenciais no arquivo .env.');
       console.error(err);
@@ -70,7 +73,7 @@ export const App: React.FC = () => {
           {/* Coluna Esquerda: Repertório e Cadastro */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
             <SongForm onSongCreated={fetchData} />
-            <SongList musicas={musicas} onSongDeleted={fetchData} />
+            <SongList musicas={musicas} avaliacoes={avaliacoes} onSongDeleted={fetchData} onSongUpdated={fetchData} />
           </div>
 
           {/* Coluna Direita: Construtor de Setlists e Listagem de Setlists */}
