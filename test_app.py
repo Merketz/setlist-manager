@@ -74,3 +74,37 @@ def test_avaliacoes_e_media():
 
     if os.path.exists(app.ARQUIVO_SETLIST):
         os.remove(app.ARQUIVO_SETLIST)
+
+
+def test_limpar_repertorio_confirmado(monkeypatch):
+    app.ARQUIVO_SETLIST = 'setlist_limpar_teste.json'
+    setlist_teste = [{"nome": "Musica 1"}, {"nome": "Musica 2"}]
+    app.salvar_setlist(setlist_teste)
+
+    # Mock input to confirm
+    monkeypatch.setattr('builtins.input', lambda _: 's')
+
+    app.limpar_repertorio(setlist_teste)
+
+    assert setlist_teste == []
+    assert app.carregar_setlist() == []
+
+    if os.path.exists(app.ARQUIVO_SETLIST):
+        os.remove(app.ARQUIVO_SETLIST)
+
+
+def test_limpar_repertorio_cancelado(monkeypatch):
+    app.ARQUIVO_SETLIST = 'setlist_limpar_teste.json'
+    setlist_teste = [{"nome": "Musica 1"}, {"nome": "Musica 2"}]
+    app.salvar_setlist(setlist_teste)
+
+    # Mock input to cancel
+    monkeypatch.setattr('builtins.input', lambda _: 'n')
+
+    app.limpar_repertorio(setlist_teste)
+
+    assert len(setlist_teste) == 2
+    assert len(app.carregar_setlist()) == 2
+
+    if os.path.exists(app.ARQUIVO_SETLIST):
+        os.remove(app.ARQUIVO_SETLIST)
