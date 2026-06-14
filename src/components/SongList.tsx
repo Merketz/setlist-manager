@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Trash2, Music, Key, Activity, Clock, MessageSquare, Star, Send, ChevronDown, ChevronUp } from 'lucide-react';
-import { deletarMusica, cadastrarAvaliacao, deletarAvaliacao, Musica, Avaliacao } from '../services/api';
+import { Trash2, Edit2, Music, Key, Activity, Clock, MessageSquare, Star, Send, ChevronDown, ChevronUp } from 'lucide-react';
+import { deletarMusica, atualizarMusica, cadastrarAvaliacao, deletarAvaliacao, Musica, Avaliacao } from '../services/api';
+
 
 interface SongListProps {
   musicas: Musica[];
@@ -34,6 +35,24 @@ export const SongList: React.FC<SongListProps> = ({ musicas, avaliacoes, onSongD
       setDeletingId(null);
     }
   };
+
+  const handleEdit = async (song: Musica) => {
+    if (!song.id) return;
+    const tom = window.prompt('Editar Tom da música:', song.tom || '-');
+    if (tom === null) return;
+    const bpm = window.prompt('Editar BPM da música:', song.bpm || '-');
+    if (bpm === null) return;
+    const status = window.prompt('Editar Status (Pendente/Em ensaio/Pronta):', song.status || 'Pendente');
+    if (status === null) return;
+
+    try {
+      await atualizarMusica(song.id, { tom, bpm, status });
+      onSongUpdated();
+    } catch (err) {
+      alert('Erro ao atualizar a música.');
+    }
+  };
+
 
   const handleAddReview = async (e: React.FormEvent, songId: string) => {
     e.preventDefault();
@@ -178,6 +197,15 @@ export const SongList: React.FC<SongListProps> = ({ musicas, avaliacoes, onSongD
                     </button>
 
                     <button
+                      className="btn btn-secondary"
+                      style={{ padding: '0.5rem' }}
+                      onClick={() => handleEdit(song)}
+                      title="Editar música"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+
+                    <button
                       className="btn btn-danger"
                       style={{ padding: '0.5rem' }}
                       onClick={() => song.id && handleDelete(song.id)}
@@ -187,6 +215,7 @@ export const SongList: React.FC<SongListProps> = ({ musicas, avaliacoes, onSongD
                       <Trash2 size={16} />
                     </button>
                   </div>
+
                 </div>
 
                 {isExpanded && (
