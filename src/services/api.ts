@@ -172,3 +172,70 @@ export async function deletarSetlist(id: string): Promise<void> {
     throw error;
   }
 }
+
+// ==========================================
+// CRUD DE AVALIAÇÕES / COMENTÁRIOS
+// ==========================================
+
+export interface Avaliacao {
+  id?: string;
+  musica_id: string;
+  autor: string;
+  nota: number;
+  comentario?: string;
+  created_at?: string;
+}
+
+export async function listarTodasAvaliacoes(): Promise<Avaliacao[]> {
+  const { data, error } = await supabase
+    .from('avaliacoes')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Erro ao listar todas avaliações:', error);
+    throw error;
+  }
+  return data || [];
+}
+
+export async function listarAvaliacoesPorMusica(musicaId: string): Promise<Avaliacao[]> {
+  const { data, error } = await supabase
+    .from('avaliacoes')
+    .select('*')
+    .eq('musica_id', musicaId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Erro ao listar avaliações da música:', error);
+    throw error;
+  }
+  return data || [];
+}
+
+export async function cadastrarAvaliacao(avaliacao: Omit<Avaliacao, 'id' | 'created_at'>): Promise<Avaliacao> {
+  const { data, error } = await supabase
+    .from('avaliacoes')
+    .insert([avaliacao])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Erro ao cadastrar avaliação:', error);
+    throw error;
+  }
+  return data;
+}
+
+export async function deletarAvaliacao(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('avaliacoes')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Erro ao deletar avaliação:', error);
+    throw error;
+  }
+}
+
